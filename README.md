@@ -1,28 +1,42 @@
-# Canton Fair Supplier App
+# Canton Fair Supplier Exporter
 
-Simple Next.js web app for scraping one or more Canton Fair 365 supplier category URLs and exporting each job to XLSX.
+A small web app that collects suppliers from Canton Fair 365 category searches and writes the result to an XLSX workbook.
 
-## Run
+[Open the app](https://cantonfair-supplier-app.vercel.app)
+
+## What it exports
+
+Each row contains the supplier name, industry, booth status, supplier ID, and source page. The workbook has a frozen header row, filters, and readable column widths.
+
+You can queue several category URLs, name each export, choose a page range, and watch progress while the server fetches the Canton Fair API. Jobs can also be cancelled.
+
+Only `365.cantonfair.org.cn` supplier search URLs are accepted. The scraper reads the category ID from the URL, obtains the access token used by the public site, retries transient API failures, and waits between pages.
+
+## Run it locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open `http://localhost:3000` and paste a Canton Fair supplier category URL. No environment variables are required.
 
-## Use
+## Main routes
 
-1. Add a job.
-2. Enter a label. This becomes the downloaded file name.
-3. Paste a Canton Fair supplier category URL.
-4. Click `Start` for each job you want to run.
+| Route | Result |
+| --- | --- |
+| `/api/scrape` | Supplier rows as JSON |
+| `/api/export` | An XLSX workbook from supplied rows |
+| `/api/export-url` | Scrapes one URL and returns the workbook |
+| `/api/export-url-stream` | Streams scrape progress and the final workbook payload |
 
-## Notes
+The scraper and workbook builder live in [`src/lib/cantonfair.ts`](src/lib/cantonfair.ts).
 
-- Scraping runs server-side in `src/lib/cantonfair.ts`.
-- `/api/scrape` returns the supplier rows as JSON.
-- `/api/export` builds the workbook with ExcelJS and returns an `.xlsx` file.
-- `/api/export-url` scrapes a URL and returns the `.xlsx` file in one request.
-- `/api/export-url-stream` streams progress updates, then returns the workbook payload for the UI download.
-- The app only accepts `365.cantonfair.org.cn` supplier search URLs.
+## Checks
+
+```bash
+npm run lint
+npm run build
+```
+
+The app depends on Canton Fair's current public site and API behaviour. If they change the token flow or response format, exports will stop until the parser catches up.
